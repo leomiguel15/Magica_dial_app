@@ -1,0 +1,49 @@
+name: Build and Test Magica Dial App
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Build EXE with PyInstaller
+      run: |
+        python -m PyInstaller --noconsole --onefile --clean --collect-all customtkinter --copy-metadata customtkinter main.py
+
+    - name: Smoke Test (Verify Startup)
+      shell: powershell
+      run: |
+        # Start the app and wait to see if it crashes
+        $process = Start-Process -FilePath "dist/main.exe" -PassThru
+        Start-Sleep -Seconds 8
+        if ($process.HasExited) {
+            Write-Host "Error: App crashed immediately after startup!"
+            exit 1
+        } else {
+            Write-Host "Success: App is running stably."
+            Stop-Process -Id $process.Id -Force
+        }
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: MagicaDial-v2-Build
+        path: dist/main.exe
