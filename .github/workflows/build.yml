@@ -3,7 +3,7 @@ name: Build and Test Magica Dial App
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   build:
