@@ -1,16 +1,25 @@
-name: Build, Test and Release Magica Dial App
+name: Build, Test and Manual Release
 
 on:
   push:
     branches:
-      - main
+      - main # Or master
   workflow_dispatch:
+    inputs:
+      release_version:
+        description: 'Version Number (e.g., v2.2.0)'
+        required: true
+        default: 'v2.2.0'
+      release_notes:
+        description: 'What is new in this release?'
+        required: false
+        default: 'Minor bug fixes and improvements.'
 
 jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: write # CRITICAL: This allows the pipeline to create a release
+      contents: write
 
     steps:
     - name: Checkout Code
@@ -44,17 +53,12 @@ jobs:
             Stop-Process -Id $process.Id -Force
         }
 
+    # This step ONLY runs if you triggered the workflow MANUALLY via the button
     - name: Create GitHub Release
+      if: github.event_name == 'workflow_dispatch'
       uses: softprops/action-gh-release@v2
-      if: success() # Only run if the build and test passed
       with:
-        tag_name: v2.1.${{ github.run_number }}
-        name: Magica Dial App Release v2.1.${{ github.run_number }}
-        body: |
-          Automated build from commit ${{ github.sha }}.
-          
-          **Changes:**
-          - Improved UI with History Cards
-          - GitHub Profile Integration
-          - Persistent Data Storage
+        tag_name: ${{ github.event.inputs.release_version }}
+        name: Magica Dial App ${{ github.event.inputs.release_version }}
+        body: ${{ github.event.inputs.release_notes }}
         files: dist/main.exe
