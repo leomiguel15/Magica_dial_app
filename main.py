@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageTk
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-# --- High-Fidelity Asset Generator ---
+# --- High-Fidelity Asset Generator --
 
 class AssetFactory:
     """Generates perfectly anti-aliased images for the canvas to prevent pixelated edges."""
