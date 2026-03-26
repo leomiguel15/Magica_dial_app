@@ -1,13 +1,16 @@
-name: Build and Test Magica Dial App
+name: Build, Test and Release Magica Dial App
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
+    permissions:
+      contents: write # CRITICAL: This allows the pipeline to create a release
 
     steps:
     - name: Checkout Code
@@ -26,24 +29,32 @@ jobs:
 
     - name: Build EXE with PyInstaller
       run: |
-        python -m PyInstaller --noconsole --onefile --clean --collect-all customtkinter --copy-metadata customtkinter main.py
+        pyinstaller --noconsole --onefile --clean --collect-all customtkinter --copy-metadata customtkinter main.py
 
     - name: Smoke Test (Verify Startup)
       shell: powershell
       run: |
-        # Start the app and wait to see if it crashes
         $process = Start-Process -FilePath "dist/main.exe" -PassThru
         Start-Sleep -Seconds 8
         if ($process.HasExited) {
-            Write-Host "Error: App crashed immediately after startup!"
+            Write-Host "Error: App crashed immediately!"
             exit 1
         } else {
-            Write-Host "Success: App is running stably."
+            Write-Host "Success: App is stable."
             Stop-Process -Id $process.Id -Force
         }
 
-    - name: Upload Build Artifact
-      uses: actions/upload-artifact@v4
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      if: success() # Only run if the build and test passed
       with:
-        name: MagicaDial-v2-Build
-        path: dist/main.exe
+        tag_name: v2.1.${{ github.run_number }}
+        name: Magica Dial App Release v2.1.${{ github.run_number }}
+        body: |
+          Automated build from commit ${{ github.sha }}.
+          
+          **Changes:**
+          - Improved UI with History Cards
+          - GitHub Profile Integration
+          - Persistent Data Storage
+        files: dist/main.exe
