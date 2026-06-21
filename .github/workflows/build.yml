@@ -38,7 +38,7 @@ jobs:
 
     - name: Build EXE with PyInstaller
       run: |
-        pyinstaller --noconsole --onefile --clean --collect-all customtkinter --copy-metadata customtkinter main.py
+        pyinstaller --noconsole --onefile --clean --icon=images/icon.ico --collect-all customtkinter --copy-metadata customtkinter main.py
 
     - name: Smoke Test (Verify Startup)
       shell: powershell
